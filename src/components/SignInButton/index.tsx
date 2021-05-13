@@ -12,7 +12,7 @@ export function SignInButton(){
     >
       <FaGithub color="#04d361"/>
       Calil
-      <FiX color="#737380"/>
+      <FiX color="#737380" className={styles.closeIcon}/>
     </button>
    ) : (
     <button 
