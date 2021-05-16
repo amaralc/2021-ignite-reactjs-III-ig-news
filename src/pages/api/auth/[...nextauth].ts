@@ -12,18 +12,36 @@ export default NextAuth({
       scope: 'read:user', // https://docs.github.com/en/developers/apps/scopes-for-oauth-apps (add more scopes, separating string with comma)
     }),
   ],
-  jwt:{
-    signingKey: process.env.SIGNING_KEY
-  },
+  // Follow this procedure for production: https://next-auth.js.org/warnings#jwt_auto_generated_signing_key
+  // jwt:{
+  //   signingKey: process.env.SIGNING_KEY
+  // },
   callbacks: {
     async signIn(user, account, profile){
       const {email} = user;
+      console.log(user)
       try{
         await fauna.query(
-          q.Create(
-            q.Collection('users'),
-            { data: { email } }
-          )
+          q.If(
+            q.Not(
+              q.Exists(
+                q.Match(
+                  q.Index('user_by_email'),
+                  q.Casefold(user.email)
+                )
+              )
+            ),
+            q.Create(
+              q.Collection('users'),
+              { data: { email } }
+            ),
+            q.Get(
+              q.Match(
+                q.Index('user_by_email'),
+                q.Casefold(user.email)
+              )
+            )     
+          )          
         )
         return true
       } catch {
